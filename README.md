@@ -14,6 +14,7 @@
 | Сайт | Опис | Посилання |
 |------|------|-----------|
 | ⛽ **ASTA** | Концепт-сайт мережі АЗС: кіберпанк-стиль, анімації | [Переглянути →](https://zaffiraxis.github.io/Zaffiraxis/asta/) |
+| 🏥 **Danke Clinic** | Сайт медичної клініки | [Переглянути →](https://zaffiraxis.github.io/Danke-Clinic/) |
 | 🦷 **Dantist Practic** | Стоматологічна студія: мінімалізм, синій акцент | [Переглянути →](https://zaffiraxis.github.io/Zaffiraxis/dantist/) |
 | 📱 **KLIUKAI.SMM** | Сайт SMM-спеціаліста: Reels, пакети, відгуки | [Переглянути →](https://zaffiraxis.github.io/Zaffiraxis/kliukai/) |
 
