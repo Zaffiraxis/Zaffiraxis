@@ -1,0 +1,513 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KLIUKAI.SMM — Контент та ведення соцмереж</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+// React loaded via CDN
+
+const NAV_LINKS = [
+  { label: "Послуги", href: "#services" },
+  { label: "Чому я", href: "#why" },
+  { label: "Кейси", href: "#cases" },
+  { label: "Пакети", href: "#packages" },
+  { label: "Відгуки", href: "#reviews" },
+];
+
+const SERVICES = [
+  { icon: "📱", title: "Ведення Instagram", desc: "Повне ведення акаунта від стратегії до публікацій" },
+  { icon: "🎬", title: "Монтаж Reels", desc: "Динамічні відео з трендовою музикою та ефектами" },
+  { icon: "✨", title: "Створення контенту", desc: "Фото, текст, ідеї — все під ваш бренд" },
+  { icon: "🎯", title: "SMM-стратегія", desc: "Чіткий план просування для вашого бізнесу" },
+  { icon: "🖼️", title: "Оформлення профілю", desc: "Стильна упаковка, яка продає з першого погляду" },
+  { icon: "💫", title: "Stories-дизайн", desc: "Щоденні stories, які утримують аудиторію" },
+];
+
+const WHY = [
+  { icon: "🎨", text: "Сучасний дизайн", sub: "Тренди, що працюють" },
+  { icon: "⚡", text: "Швидкий монтаж", sub: "Без затримок та дедлайнів" },
+  { icon: "💰", text: "Контент, що продає", sub: "Заявки, а не просто лайки" },
+  { icon: "🤝", text: "Індивідуальний підхід", sub: "Під кожен бізнес окремо" },
+  { icon: "📈", text: "Допомагаю бізнесу рости", sub: "Реальні результати в цифрах" },
+];
+
+const CASES = [
+  { label: "Reels", stat: "+340%", sub: "охоплення", color: "#ff6b9d" },
+  { label: "Профіль", stat: "2,800", sub: "нових підписників", color: "#c44dff" },
+  { label: "Статистика", stat: "×4", sub: "зростання продажів", color: "#ff6b9d" },
+  { label: "Before/After", stat: "0→15k", sub: "підписників за 3 міс", color: "#c44dff" },
+];
+
+const REVIEWS = [
+  { name: "Аліна К.", biz: "Студія краси", text: "За 2 місяці наш Instagram виріс з 500 до 4000 підписників. Клієнти самі пишуть — це магія! 💖", stars: 5 },
+  { name: "Марія Т.", biz: "Кондитерська", text: "Reels, які зробили для нас, набрали 200к переглядів. Ніколи не думала, що SMM так впливає на продажі.", stars: 5 },
+  { name: "Олена В.", biz: "Онлайн-магазин", text: "Нарешті контент, який не соромно показати. Стратегія чітка, результат видно вже в перший місяць.", stars: 5 },
+];
+
+const PACKAGES = [
+  {
+    name: "START",
+    color: "#ff6b9d",
+    items: ["Оформлення сторінки", "Контент-план", "8 stories", "8 posts / reels", "Базовий монтаж", "Тексти до постів", "Аналіз сторінки"],
+    badge: "Початок",
+    imgIndex: 3,
+  },
+  {
+    name: "STANDARD",
+    color: "#c44dff",
+    items: ["Оформлення та упаковка профілю", "Контент-стратегія", "12–15 reels / posts", "Stories щоденно", "Монтаж та обробка відео", "Продаючі тексти", "Аналіз конкурентів", "Допомога з ідеями та зйомками"],
+    badge: "Хіт",
+    popular: true,
+    imgIndex: 4,
+  },
+  {
+    name: "PREMIUM",
+    color: "#ff6b9d",
+    items: ["Повне ведення Instagram", "Стратегія просування", "Контент, який продає", "Reels / stories / posts", "Сценарії та ідеї", "Візуал бренду", "Аналіз та звітність", "Консультації та підтримка", "Допомога з рекламою"],
+    badge: "Максимум",
+    imgIndex: 2,
+  },
+];
+
+// Encode images as URLs for display - using uploaded image paths
+const IMG_PATHS = [
+  "/mnt/user-data/uploads/1000038273.jpg",
+  "/mnt/user-data/uploads/1000038269.jpg",
+  "/mnt/user-data/uploads/1000038278.jpg",
+  "/mnt/user-data/uploads/1000038280.jpg",
+  "/mnt/user-data/uploads/1000038276.jpg",
+];
+
+function useInView(threshold = 0.15) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
+}
+
+function AnimatedSection({ children, delay = 0, className = "" }) {
+  const [ref, visible] = useInView();
+  return (
+    <div ref={ref} className={className} style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(40px)",
+      transition: `opacity 0.7s ease ${delay}s, transform 0.7s ease ${delay}s`,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function App() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeReview, setActiveReview] = useState(0);
+  const [imgErrors, setImgErrors] = useState({});
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveReview(v => (v + 1) % REVIEWS.length), 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  const handleImgError = (idx) => setImgErrors(e => ({ ...e, [idx]: true }));
+
+  const scrollTo = (href) => {
+    const el = document.querySelector(href);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+    setMenuOpen(false);
+  };
+
+  const GlowBtn = ({ children, href, outline, onClick, style = {} }) => (
+    <a href={href} onClick={onClick} style={{
+      display: "inline-block",
+      padding: "14px 32px",
+      borderRadius: "50px",
+      fontFamily: "'Unbounded', sans-serif",
+      fontWeight: 700,
+      fontSize: "0.85rem",
+      letterSpacing: "0.05em",
+      cursor: "pointer",
+      textDecoration: "none",
+      border: outline ? "2px solid #ff6b9d" : "none",
+      background: outline ? "transparent" : "linear-gradient(135deg, #ff6b9d, #c44dff)",
+      color: "#fff",
+      boxShadow: outline ? "0 0 20px rgba(255,107,157,0.3)" : "0 0 30px rgba(255,107,157,0.5), 0 4px 20px rgba(196,77,255,0.3)",
+      transition: "all 0.3s",
+      whiteSpace: "nowrap",
+      ...style,
+    }}
+    onMouseEnter={e => { e.target.style.transform = "scale(1.05)"; e.target.style.boxShadow = outline ? "0 0 30px rgba(255,107,157,0.5)" : "0 0 50px rgba(255,107,157,0.8), 0 8px 30px rgba(196,77,255,0.5)"; }}
+    onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.boxShadow = outline ? "0 0 20px rgba(255,107,157,0.3)" : "0 0 30px rgba(255,107,157,0.5), 0 4px 20px rgba(196,77,255,0.3)"; }}
+    >
+      {children}
+    </a>
+  );
+
+  return (
+    <div style={{ background: "#080808", color: "#fff", fontFamily: "'Cormorant Garamond', serif", overflowX: "hidden", minHeight: "100vh" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0d0d0d; }
+        ::-webkit-scrollbar-thumb { background: #ff6b9d; border-radius: 2px; }
+        .pkg-card:hover { transform: translateY(-8px) scale(1.02); }
+        .svc-card:hover { transform: translateY(-6px); border-color: #ff6b9d !important; }
+        .case-card:hover .case-overlay { opacity: 1 !important; }
+        .case-card:hover img { transform: scale(1.08); }
+      `}</style>
+
+      {/* NAVBAR */}
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        padding: "16px 5%",
+        background: scrolled ? "rgba(8,8,8,0.92)" : "transparent",
+        backdropFilter: scrolled ? "blur(20px)" : "none",
+        borderBottom: scrolled ? "1px solid rgba(255,107,157,0.15)" : "none",
+        transition: "all 0.4s",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "1.1rem", color: "#ff6b9d", letterSpacing: "0.1em" }}>
+          KLIUKAI<span style={{ color: "#fff" }}>.SMM</span>
+        </div>
+        <div style={{ display: "flex", gap: "32px", alignItems: "center" }} className="nav-desktop">
+          {NAV_LINKS.map(l => (
+            <a key={l.label} href={l.href} onClick={e => { e.preventDefault(); scrollTo(l.href); }}
+              style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none", fontFamily: "'Unbounded', sans-serif", fontSize: "0.75rem", letterSpacing: "0.08em", transition: "color 0.2s" }}
+              onMouseEnter={e => e.target.style.color = "#ff6b9d"}
+              onMouseLeave={e => e.target.style.color = "rgba(255,255,255,0.7)"}
+            >{l.label}</a>
+          ))}
+          <GlowBtn href="https://t.me/kliukai_smm" style={{ padding: "10px 22px", fontSize: "0.75rem" }}>Зв'язатись</GlowBtn>
+        </div>
+        <button onClick={() => setMenuOpen(!menuOpen)} style={{ display: "none", background: "none", border: "none", color: "#ff6b9d", fontSize: "1.5rem", cursor: "pointer" }} className="hamburger">☰</button>
+      </nav>
+
+      {/* HERO */}
+      <section style={{ minHeight: "100vh", display: "flex", alignItems: "center", position: "relative", overflow: "hidden", padding: "0 5%" }}>
+        {/* BG Glows */}
+        <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(255,107,157,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-10%", left: "-5%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(196,77,255,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 80%, rgba(255,107,157,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(196,77,255,0.05) 0%, transparent 50%)", pointerEvents: "none" }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: "60px", width: "100%", maxWidth: "1200px", margin: "0 auto", paddingTop: "80px", flexWrap: "wrap" }}>
+          {/* Text */}
+          <div style={{ flex: "1 1 400px", zIndex: 1 }}>
+            <div style={{ display: "inline-block", padding: "6px 16px", border: "1px solid rgba(255,107,157,0.4)", borderRadius: "50px", fontFamily: "'Unbounded', sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", color: "#ff6b9d", marginBottom: "24px" }}>
+              ✦ SMM & CONTENT CREATOR
+            </div>
+            <h1 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "clamp(2.2rem, 5vw, 4rem)", lineHeight: 1.1, marginBottom: "16px" }}>
+              SMM<br />
+              <span style={{ background: "linear-gradient(135deg, #ff6b9d, #c44dff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Content</span><br />
+              Creator
+            </h1>
+            <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.7, marginBottom: "8px", fontStyle: "italic" }}>
+              Ведення соцмереж
+            </p>
+            <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: "36px", maxWidth: "420px" }}>
+              Допомагаю бізнесам рости через контент, Reels та стратегію — перетворюю підписників на клієнтів
+            </p>
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+              <GlowBtn href="https://t.me/kliukai_smm">Замовити ведення</GlowBtn>
+              <GlowBtn href="#cases" outline onClick={e => { e.preventDefault(); scrollTo("#cases"); }}>Переглянути кейси</GlowBtn>
+            </div>
+            <div style={{ display: "flex", gap: "32px", marginTop: "40px" }}>
+              {[["50+", "Клієнтів"], ["200k+", "Охоплень"], ["3x", "Зростання"]].map(([n, l]) => (
+                <div key={l}>
+                  <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "1.6rem", color: "#ff6b9d" }}>{n}</div>
+                  <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hero Image */}
+          <div style={{ flex: "1 1 300px", display: "flex", justifyContent: "center", zIndex: 1 }}>
+            <div style={{ position: "relative", width: "min(380px, 90vw)" }}>
+              <div style={{ position: "absolute", inset: "-3px", background: "linear-gradient(135deg, #ff6b9d, #c44dff, #ff6b9d)", borderRadius: "24px", zIndex: 0, animation: "spin 4s linear infinite" }} />
+              <div style={{ position: "relative", zIndex: 1, borderRadius: "22px", overflow: "hidden", background: "#111" }}>
+                {!imgErrors[0] ? (
+                  <img src={IMG_PATHS[0]} alt="SMM Specialist" onError={() => handleImgError(0)}
+                    style={{ width: "100%", display: "block", objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: "100%", aspectRatio: "3/4", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #1a0a12, #0d0615)", fontSize: "4rem" }}>💫</div>
+                )}
+              </div>
+              <div style={{ position: "absolute", bottom: "20px", right: "-20px", background: "rgba(255,107,157,0.15)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,107,157,0.3)", borderRadius: "16px", padding: "12px 20px", zIndex: 2 }}>
+                <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, fontSize: "1rem", color: "#ff6b9d" }}>+340%</div>
+                <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)" }}>охоплення</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div style={{ position: "absolute", bottom: "30px", left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", letterSpacing: "0.2em", fontFamily: "'Unbounded', sans-serif" }}>
+          <span>SCROLL</span>
+          <div style={{ width: "1px", height: "40px", background: "linear-gradient(to bottom, rgba(255,107,157,0.5), transparent)", animation: "pulse 2s infinite" }} />
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section id="services" style={{ padding: "100px 5%", maxWidth: "1200px", margin: "0 auto" }}>
+        <AnimatedSection>
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
+            <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", color: "#ff6b9d", marginBottom: "12px" }}>✦ ЩО Я РОБЛЮ</div>
+            <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>Послуги</h2>
+          </div>
+        </AnimatedSection>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+          {SERVICES.map((s, i) => (
+            <AnimatedSection key={s.title} delay={i * 0.07}>
+              <div className="svc-card" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "32px", transition: "all 0.3s", cursor: "default" }}>
+                <div style={{ fontSize: "2.2rem", marginBottom: "16px" }}>{s.icon}</div>
+                <h3 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, fontSize: "0.9rem", marginBottom: "10px", letterSpacing: "0.05em" }}>{s.title}</h3>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem", lineHeight: 1.6 }}>{s.desc}</p>
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+      </section>
+
+      {/* WHY ME */}
+      <section id="why" style={{ padding: "100px 5%", background: "linear-gradient(135deg, rgba(255,107,157,0.04), rgba(196,77,255,0.04))", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "800px", height: "800px", background: "radial-gradient(circle, rgba(255,107,157,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <AnimatedSection>
+            <div style={{ textAlign: "center", marginBottom: "60px" }}>
+              <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", color: "#ff6b9d", marginBottom: "12px" }}>✦ МОЯ ПЕРЕВАГА</div>
+              <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>Чому саме я</h2>
+            </div>
+          </AnimatedSection>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", justifyContent: "center" }}>
+            {WHY.map((w, i) => (
+              <AnimatedSection key={w.text} delay={i * 0.1}>
+                <div style={{ background: "rgba(255,107,157,0.06)", border: "1px solid rgba(255,107,157,0.2)", borderRadius: "20px", padding: "28px 32px", textAlign: "center", minWidth: "180px", backdropFilter: "blur(10px)" }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "12px" }}>{w.icon}</div>
+                  <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, fontSize: "0.85rem", marginBottom: "6px", color: "#ff6b9d" }}>{w.text}</div>
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>{w.sub}</div>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CASES */}
+      <section id="cases" style={{ padding: "100px 5%", maxWidth: "1200px", margin: "0 auto" }}>
+        <AnimatedSection>
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
+            <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", color: "#ff6b9d", marginBottom: "12px" }}>✦ РЕЗУЛЬТАТИ</div>
+            <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>Наші кейси</h2>
+          </div>
+        </AnimatedSection>
+        {/* Real case images */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px", marginBottom: "40px" }}>
+          {[0, 1].map(idx => (
+            <AnimatedSection key={idx} delay={idx * 0.1}>
+              <div className="case-card" style={{ borderRadius: "20px", overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,107,157,0.15)" }}>
+                {!imgErrors[idx] ? (
+                  <img src={IMG_PATHS[idx]} alt={`Case ${idx + 1}`} onError={() => handleImgError(idx)}
+                    style={{ width: "100%", display: "block", transition: "transform 0.5s", objectFit: "cover", maxHeight: "500px" }} />
+                ) : (
+                  <div style={{ width: "100%", height: "300px", background: "linear-gradient(135deg, #1a0a12, #0d0615)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3rem" }}>📊</div>
+                )}
+                <div className="case-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(255,107,157,0.9), transparent)", opacity: 0, transition: "opacity 0.3s", display: "flex", alignItems: "flex-end", padding: "20px" }}>
+                  <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, color: "#fff" }}>Переглянути кейс →</div>
+                </div>
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+          {CASES.map((c, i) => (
+            <AnimatedSection key={c.label} delay={i * 0.08}>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${c.color}33`, borderRadius: "20px", padding: "28px", textAlign: "center", transition: "all 0.3s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = c.color; e.currentTarget.style.background = `${c.color}10`; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = `${c.color}33`; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "2rem", color: c.color, marginBottom: "6px" }}>{c.stat}</div>
+                <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, fontSize: "0.75rem", marginBottom: "4px" }}>{c.label}</div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>{c.sub}</div>
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+      </section>
+
+      {/* PACKAGES */}
+      <section id="packages" style={{ padding: "100px 5%", background: "rgba(255,107,157,0.02)", position: "relative", overflow: "hidden" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <AnimatedSection>
+            <div style={{ textAlign: "center", marginBottom: "60px" }}>
+              <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", color: "#ff6b9d", marginBottom: "12px" }}>✦ ПАКЕТИ</div>
+              <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>Послуги та ціни</h2>
+              <p style={{ color: "rgba(255,255,255,0.4)", marginTop: "12px", fontSize: "0.9rem" }}>Instagram + TikTok · Без зйомки</p>
+            </div>
+          </AnimatedSection>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+            {PACKAGES.map((pkg, i) => (
+              <AnimatedSection key={pkg.name} delay={i * 0.12}>
+                <div className="pkg-card" style={{
+                  background: pkg.popular ? "linear-gradient(135deg, rgba(255,107,157,0.12), rgba(196,77,255,0.12))" : "rgba(255,255,255,0.03)",
+                  border: `2px solid ${pkg.popular ? "#ff6b9d" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: "24px", overflow: "hidden", transition: "all 0.4s", position: "relative",
+                  boxShadow: pkg.popular ? "0 0 40px rgba(255,107,157,0.15)" : "none",
+                }}>
+                  {pkg.popular && (
+                    <div style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, #ff6b9d, #c44dff)", borderRadius: "50px", padding: "4px 14px", fontFamily: "'Unbounded', sans-serif", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em" }}>
+                      ХІТ
+                    </div>
+                  )}
+                  {/* Package Image */}
+                  {!imgErrors[pkg.imgIndex] ? (
+                    <img src={IMG_PATHS[pkg.imgIndex]} alt={pkg.name} onError={() => handleImgError(pkg.imgIndex)}
+                      style={{ width: "100%", display: "block", objectFit: "contain", background: "#f5f0f2", maxHeight: "420px" }} />
+                  ) : (
+                    <div style={{ height: "200px", background: `linear-gradient(135deg, ${pkg.color}22, rgba(0,0,0,0.5))`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "2rem", color: pkg.color }}>{pkg.name}</span>
+                    </div>
+                  )}
+                  <div style={{ padding: "24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+                      <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "1.4rem", color: pkg.color }}>{pkg.name}</span>
+                      <span style={{ background: `${pkg.color}22`, border: `1px solid ${pkg.color}44`, borderRadius: "50px", padding: "3px 10px", fontSize: "0.65rem", color: pkg.color, fontFamily: "'Unbounded', sans-serif" }}>{pkg.badge}</span>
+                    </div>
+                    <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
+                      {pkg.items.map(item => (
+                        <li key={item} style={{ display: "flex", alignItems: "center", gap: "10px", color: "rgba(255,255,255,0.75)", fontSize: "0.85rem" }}>
+                          <span style={{ color: pkg.color, fontSize: "0.7rem" }}>✦</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    <GlowBtn href="https://t.me/kliukai_smm" style={{ width: "100%", textAlign: "center", background: pkg.popular ? "linear-gradient(135deg, #ff6b9d, #c44dff)" : "transparent", border: `2px solid ${pkg.color}`, boxShadow: `0 0 20px ${pkg.color}44` }}>
+                      Обрати пакет
+                    </GlowBtn>
+                  </div>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* REVIEWS */}
+      <section id="reviews" style={{ padding: "100px 5%", maxWidth: "900px", margin: "0 auto" }}>
+        <AnimatedSection>
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
+            <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", color: "#ff6b9d", marginBottom: "12px" }}>✦ ВІДГУКИ</div>
+            <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>Клієнти про мене</h2>
+          </div>
+        </AnimatedSection>
+        <div style={{ position: "relative", overflow: "hidden" }}>
+          <div style={{ display: "flex", transition: "transform 0.6s ease", transform: `translateX(-${activeReview * 100}%)` }}>
+            {REVIEWS.map((r) => (
+              <div key={r.name} style={{ minWidth: "100%", padding: "0 8px" }}>
+                <div style={{ background: "rgba(255,107,157,0.06)", border: "1px solid rgba(255,107,157,0.2)", borderRadius: "24px", padding: "40px", textAlign: "center", backdropFilter: "blur(10px)" }}>
+                  <div style={{ fontSize: "1.2rem", marginBottom: "16px" }}>{"★".repeat(r.stars)}</div>
+                  <p style={{ fontSize: "1.1rem", lineHeight: 1.7, color: "rgba(255,255,255,0.8)", fontStyle: "italic", marginBottom: "24px", maxWidth: "600px", margin: "0 auto 24px" }}>
+                    "{r.text}"
+                  </p>
+                  <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, color: "#ff6b9d", fontSize: "0.85rem" }}>{r.name}</div>
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", marginTop: "4px" }}>{r.biz}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "24px" }}>
+            {REVIEWS.map((_, i) => (
+              <button key={i} onClick={() => setActiveReview(i)} style={{ width: i === activeReview ? "24px" : "8px", height: "8px", borderRadius: "4px", background: i === activeReview ? "#ff6b9d" : "rgba(255,255,255,0.2)", border: "none", cursor: "pointer", transition: "all 0.3s" }} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section style={{ padding: "100px 5%", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, rgba(255,107,157,0.12) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <AnimatedSection>
+          <div style={{ maxWidth: "700px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+            <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", color: "#ff6b9d", marginBottom: "16px" }}>✦ ПОЧНІТЬ ЗАРАЗ</div>
+            <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", lineHeight: 1.15, marginBottom: "20px" }}>
+              Готові масштабувати свій <span style={{ background: "linear-gradient(135deg, #ff6b9d, #c44dff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Instagram</span>?
+            </h2>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem", marginBottom: "40px", lineHeight: 1.7 }}>
+              Напишіть мені — обговоримо ваш проєкт безкоштовно
+            </p>
+            <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+              <GlowBtn href="https://t.me/kliukai_smm" style={{ fontSize: "1rem", padding: "18px 48px" }}>
+                ✈️ Написати в Telegram
+              </GlowBtn>
+              <GlowBtn href="https://instagram.com/kliukai.smm" outline style={{ fontSize: "1rem", padding: "18px 48px" }}>
+                📸 Instagram Direct
+              </GlowBtn>
+            </div>
+          </div>
+        </AnimatedSection>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ borderTop: "1px solid rgba(255,107,157,0.1)", padding: "40px 5%", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: "1rem", color: "#ff6b9d" }}>
+          KLIUKAI<span style={{ color: "#fff" }}>.SMM</span>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", marginTop: "4px", letterSpacing: "0.1em" }}>Створюємо контент, який працює</div>
+        </div>
+        <div style={{ display: "flex", gap: "20px" }}>
+          {[["📸", "Instagram", "https://instagram.com/kliukai.smm"], ["✈️", "Telegram", "https://t.me/kliukai_smm"], ["🎵", "TikTok", "https://tiktok.com/@kliukai.smm"]].map(([ic, name, href]) => (
+            <a key={name} href={href} style={{ display: "flex", alignItems: "center", gap: "6px", color: "rgba(255,255,255,0.5)", textDecoration: "none", fontFamily: "'Unbounded', sans-serif", fontSize: "0.7rem", letterSpacing: "0.08em", transition: "color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.color = "#ff6b9d"}
+              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.5)"}>
+              {ic} {name}
+            </a>
+          ))}
+        </div>
+        <div style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.7rem", fontFamily: "'Unbounded', sans-serif" }}>
+          © 2025 KLIUKAI.SMM
+        </div>
+      </footer>
+
+      <style>{`
+        @keyframes spin {
+          from { opacity: 0.6; }
+          50% { opacity: 1; }
+          to { opacity: 0.6; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; transform: scaleY(1); }
+          50% { opacity: 1; transform: scaleY(1.2); }
+        }
+        @media (max-width: 768px) {
+          .nav-desktop { display: none !important; }
+          .hamburger { display: block !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
